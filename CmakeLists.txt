@@ -1,0 +1,54 @@
+cmake_minimum_required(VERSION 3.5)
+
+project(myEngine VERSION 0.1.0 LANGUAGES C CXX)
+
+include(CTest)
+enable_testing()
+
+# find_package(OpenCV REQUIRED)
+# find_package(glm CONFIG REQUIRED)
+
+
+include_directories(include)
+
+add_library(MyLibName1 STATIC IMPORTED)
+set_target_properties(MyLibName1
+                    PROPERTIES IMPORTED_LOCATION
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/libs/glew32.lib)
+
+# 这里以后改成相对路径
+add_library(MyLibName2 STATIC IMPORTED)
+set_target_properties(MyLibName2
+                    PROPERTIES IMPORTED_LOCATION
+                    "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64/OpenGL32.Lib")
+
+add_library(MyLibName3 STATIC IMPORTED)
+set_target_properties(MyLibName3
+                    PROPERTIES IMPORTED_LOCATION
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/libs/glfw3.lib)
+add_library(MyLibName4 STATIC IMPORTED)
+set_target_properties(MyLibName4
+                    PROPERTIES IMPORTED_LOCATION
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/libs/glfw3_mt.lib)
+
+add_library(MyLibName5 STATIC IMPORTED)
+set_target_properties(MyLibName5
+                    PROPERTIES IMPORTED_LOCATION
+                    ${CMAKE_CURRENT_SOURCE_DIR}/src/libs/glfw3dll.lib)
+
+
+set(SOURCES
+    src/main.cpp
+)
+add_executable(myEngine ${SOURCES})
+
+set_property(TARGET myEngine PROPERTY CXX_STANDARD 17)
+
+
+# target_link_libraries(myGame ${OpenCV_LIBS} )
+# target_link_libraries(myGame glm::glm)
+target_link_libraries(myEngine MyLibName1)
+target_link_libraries(myEngine MyLibName2)
+target_link_libraries(myEngine MyLibName3)
+target_link_libraries(myEngine MyLibName4)
+target_link_libraries(myEngine MyLibName5)
