@@ -1,6 +1,7 @@
 #include "Assets/Camera.h"
 
-Camera::Camera(GLfloat FOV, GLfloat width, GLfloat height, GLfloat farPlane, GLfloat nearPlane, glm::vec3 camPos)
+// 最开始函数内部的nearPlane 和 farPlane弄混了。搞得enableDepth也反了
+Camera::Camera(GLfloat FOV, GLfloat width, GLfloat height, GLfloat nearPlane, GLfloat farPlane, glm::vec3 camPos)
 {
     cameraPos = camPos;
     glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -9,7 +10,10 @@ Camera::Camera(GLfloat FOV, GLfloat width, GLfloat height, GLfloat farPlane, GLf
     viewMatrix = glm::lookAt(cameraPos, cameraFront, cameraUp);
     projectionMatrix = glm::perspective(FOV, width  / height, nearPlane, farPlane);
 }
-
+Camera::~Camera()
+{
+    
+}
 glm::mat4 Camera::getViewMatrix()
 {
     return viewMatrix;

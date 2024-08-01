@@ -39,6 +39,10 @@ set_target_properties(MyLibName5
 
 set(SOURCES
     src/main.cpp
+    src/Assets/Camera.cpp
+    src/Assets/LightRenderer.cpp
+    src/Assets/Mesh.cpp
+    src/Assets/ShaderLoader.cpp
 )
 add_executable(myEngine ${SOURCES})
 
