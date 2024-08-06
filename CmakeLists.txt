@@ -5,37 +5,11 @@ project(myEngine VERSION 0.1.0 LANGUAGES C CXX)
 include(CTest)
 enable_testing()
 
-# find_package(OpenCV REQUIRED)
-# find_package(glm CONFIG REQUIRED)
-
 
 include_directories(include)
-
-add_library(MyLibName1 STATIC IMPORTED)
-set_target_properties(MyLibName1
-                    PROPERTIES IMPORTED_LOCATION
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/libs/glew32.lib)
-
-# 这里以后改成相对路径
-add_library(MyLibName2 STATIC IMPORTED)
-set_target_properties(MyLibName2
-                    PROPERTIES IMPORTED_LOCATION
-                    "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64/OpenGL32.Lib")
-
-add_library(MyLibName3 STATIC IMPORTED)
-set_target_properties(MyLibName3
-                    PROPERTIES IMPORTED_LOCATION
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/libs/glfw3.lib)
-add_library(MyLibName4 STATIC IMPORTED)
-set_target_properties(MyLibName4
-                    PROPERTIES IMPORTED_LOCATION
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/libs/glfw3_mt.lib)
-
-add_library(MyLibName5 STATIC IMPORTED)
-set_target_properties(MyLibName5
-                    PROPERTIES IMPORTED_LOCATION
-                    ${CMAKE_CURRENT_SOURCE_DIR}/src/libs/glfw3dll.lib)
-
+include_directories(include/bullet)
+# 添加lib的文件夹，必须在add_executable之前
+link_directories(src/libs)
 
 set(SOURCES
     src/main.cpp
@@ -43,16 +17,26 @@ set(SOURCES
     src/Assets/LightRenderer.cpp
     src/Assets/Mesh.cpp
     src/Assets/ShaderLoader.cpp
+    src/Assets/MeshRenderer.cpp
+    src/Assets/TextureLoader.cpp
 )
-add_executable(myEngine ${SOURCES})
 
+add_executable(myEngine ${SOURCES})
 set_property(TARGET myEngine PROPERTY CXX_STANDARD 17)
 
+# 这里以后改成相对路径
+# 相对路径参考示例：${CMAKE_CURRENT_SOURCE_DIR}/src/libs/glfw3.lib
+# 一次添加一个lib的方式
+add_library(MyLibName STATIC IMPORTED)
+set_target_properties(MyLibName
+                    PROPERTIES IMPORTED_LOCATION
+                    "C:/Program Files (x86)/Windows Kits/10/Lib/10.0.22621.0/um/x64/OpenGL32.Lib")
 
-# target_link_libraries(myGame ${OpenCV_LIBS} )
-# target_link_libraries(myGame glm::glm)
-target_link_libraries(myEngine MyLibName1)
-target_link_libraries(myEngine MyLibName2)
-target_link_libraries(myEngine MyLibName3)
-target_link_libraries(myEngine MyLibName4)
-target_link_libraries(myEngine MyLibName5)
+# 回答说下面的find_library方式更好,但这里一次只有一个。
+# find_library(PROTOBUF_LIBRARY protobuf HINTS /usr/lib/x86_64-linux-gnu)
+# target_link_libraries(test PUBLIC ${PROTOBUF_LIBRARY})
+
+# 会自动把文件里面带lib的给你找齐
+target_link_libraries(myEngine glew32 glfw3 glfw3_mt glfw3dll BulletCollision BulletDynamics LinearMath)
+target_link_libraries(myEngine MyLibName)
+

@@ -114,8 +114,10 @@ void Mesh::setSphereData(std::vector<Vertex>& vertices, std::vector<uint32_t>& i
 	std::vector<Vertex> _vertices;
 	std::vector<uint32_t> _indices;
 
+	// 经纬度都是20根
 	float latitudeBands = 20.0f;
 	float longitudeBands = 20.0f;
+	// 球体半径为1
 	float radius = 1.0f;
 
 	for (float latNumber = 0; latNumber <= latitudeBands; latNumber++) {
@@ -130,7 +132,8 @@ void Mesh::setSphereData(std::vector<Vertex>& vertices, std::vector<uint32_t>& i
 			float cosPhi = cos(phi);
 
 			Vertex vs;
-
+			// uv就是把这个模型摊开，这个点对应于贴图上面的位置。
+			// 这个像素的颜色就会用来当作当前的vertex的颜色。中间就是插值那些东西了
 			vs.texCoords.x = (longNumber / longitudeBands); // u
 			vs.texCoords.y = (latNumber / latitudeBands);   // v
 
