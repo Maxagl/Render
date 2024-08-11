@@ -1,9 +1,10 @@
 #include "Assets/MeshRenderer.h"
 
-MeshRenderer::MeshRenderer(MeshType modelType, Camera* _camera, btRigidBody* _rigidBody)
+MeshRenderer::MeshRenderer(MeshType modelType, std::string _name, Camera* _camera, btRigidBody* _rigidBody)
 {
     rigidBody = _rigidBody;
     camera = _camera;
+    name = _name;
     scale = glm::vec3(1.0f, 1.0f, 1.0f);
     position = glm::vec3(0.0f, 0.0f, 0.0f);
     switch (modelType)

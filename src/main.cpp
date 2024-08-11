@@ -18,24 +18,73 @@ MeshRenderer* ground;
 
 btDiscreteDynamicsWorld* dynamicsWorld;
 
+GLuint flatShaderProgram, litTextureShaderProgram, textProgram;
+GLuint textureShaderProgram;
+GLuint sphereTexture, groundTexture;
+
+
 void initGame();
 void renderScene();
+void addRigidBodies();
 
 static void glfwError(int id, const char* description)
 {
  std::cout << description << std::endl;
 }
+void addRigidBodies()
+{
+    btScalar mass = 13.0f;
+	btVector3 sphereInertia(0, 0, 0);
+    btCollisionShape* sphereShape = new btSphereShape(1.0f);
+    btDefaultMotionState* sphereMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0.5f, 0)));
+    btRigidBody::btRigidBodyConstructionInfo sphereRigidBodyCI(mass, sphereMotionState, sphereShape, sphereInertia);
+    btRigidBody*  sphereRigidBody = new btRigidBody(sphereRigidBodyCI);
+    sphereRigidBody->setRestitution(1.0f);
+    sphereRigidBody->setFriction(0.0f);
+    //sphereShape->calculateLocalInertia(mass, sphereInertia);
+    sphereRigidBody->setActivationState(DISABLE_DEACTIVATION);
 
+    sphere = new MeshRenderer(MeshType::kSphere, "hero", camera, sphereRigidBody);
+    sphere->setProgram(textureShaderProgram);
+    sphere->setTexture(sphereTexture);
+    //sphere->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    sphere->setScale(glm::vec3(1.0f));
+    dynamicsWorld->addRigidBody(sphereRigidBody);
+
+    // github官网文档有介绍MotionState是什么
+    btCollisionShape* groundShape = new btBoxShape(btVector3(4.0f, 0.5f, 4.0f));
+    btDefaultMotionState* groundMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0.0f, -2.0f, 0.0f)));
+    btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0.0f, new btDefaultMotionState(), groundShape, btVector3(0.0f ,0.0f, 0.0f));
+    btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
+    groundRigidBody->setFriction(1.0f);
+    groundRigidBody->setRestitution(0.0);
+    groundRigidBody->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
+
+    ground = new MeshRenderer(MeshType::kCube, "ground", camera, groundRigidBody);
+    ground->setProgram(textureShaderProgram);
+    ground->setTexture(groundTexture);
+    ground->setScale(glm::vec3(4.0f, 0.5f, 4.0f));
+    groundRigidBody->setUserPointer(ground);
+
+    dynamicsWorld->addRigidBody(groundRigidBody);
+
+    // Enemy Rigid body
+    btCollisionShape* shape = new btBoxShape(btVector3(1.0f, 1.0f, 1.0f));
+    btDefaultMotionState* motionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(18.0f, 1.0f, 0.0f)));
+    btRigidBody::btRigidBodyConstructionInfo rbCI(0.0f, motionState, shape, btVector3(0.0f, 0.0f, 0.0f));
+    btRigidBody* rb = new btRigidBody(rbCI);
+
+}
 void initGame()
 {
     glEnable(GL_DEPTH_TEST);
     ShaderLoader shader;
-    GLuint flatShaderProgram = shader.CreateProgram("../Shaders/FlatModel.vs", "../Shaders/FlatModel.fs");
-    GLuint textureShaderProgram = shader.CreateProgram("../Shaders/TexturedModel.vs", "../Shaders/TexturedModel.fs");
+    flatShaderProgram = shader.CreateProgram("../Shaders/FlatModel.vs", "../Shaders/FlatModel.fs");
+    textureShaderProgram = shader.CreateProgram("../Shaders/TexturedModel.vs", "../Shaders/TexturedModel.fs");
 
     TextureLoader tLoader;
-    GLuint sphereTexture = tLoader.getTextureID("../Images/globe.jpg");
-    GLuint groundTexture = tLoader.getTextureID("../Images/ground.jpg");
+    sphereTexture = tLoader.getTextureID("../Images/globe.jpg");
+    groundTexture = tLoader.getTextureID("../Images/ground.jpg");
 
 
     
@@ -52,43 +101,7 @@ void initGame()
 
     dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, btCollisionConfiguration);
     dynamicsWorld->setGravity(btVector3(0, -9.8, 0));
-    btScalar mass = 10.0f;
-    btVector3 sphereInertia(0.0f ,0.0f, 0.0f);
-
-    btCollisionShape* sphereShape = new btSphereShape(1.0f);
-    btDefaultMotionState* sphereMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 10.0f, 0)));
-    btRigidBody::btRigidBodyConstructionInfo sphereRigidBodyCI(mass, sphereMotionState, sphereShape, sphereInertia);
-    btRigidBody*  sphereRigidBody = new btRigidBody(sphereRigidBodyCI);
-    sphereRigidBody->setRestitution(1.0f);
-    sphereRigidBody->setFriction(1.0f);
-    sphereShape->calculateLocalInertia(mass, sphereInertia);
-
-    btCollisionShape* groundShape = new btBoxShape(btVector3(4.0f, 0.5f, 4.0f));
-    btDefaultMotionState* groundMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0.0f, -2.0f, 0.0f)));
-    btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI(0.0f, new btDefaultMotionState(), groundShape, btVector3(0.0f ,0.0f, 0.0f));
-    btRigidBody* groundRigidBody = new btRigidBody(groundRigidBodyCI);
-    groundRigidBody->setFriction(1.0f);
-    groundRigidBody->setRestitution(0.9);
-    groundRigidBody->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
-
-    
-
-
-
-    dynamicsWorld->addRigidBody(sphereRigidBody);
-    dynamicsWorld->addRigidBody(groundRigidBody);
-
-    sphere = new MeshRenderer(MeshType::kSphere, camera, sphereRigidBody);
-    sphere->setProgram(textureShaderProgram);
-    sphere->setTexture(sphereTexture);
-    //sphere->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    sphere->setScale(glm::vec3(1.0f));
-
-    ground = new MeshRenderer(MeshType::kCube, camera, groundRigidBody);
-    ground->setProgram(textureShaderProgram);
-    ground->setTexture(groundTexture);
-    ground->setScale(glm::vec3(4.0f, 0.5f, 4.0f));
-
+    addRigidBodies();
 
 }
 

@@ -13,7 +13,7 @@
 class MeshRenderer
 {
 public:
-    MeshRenderer(MeshType modelType, Camera* _camera, btRigidBody* _rigidBody);
+    MeshRenderer(MeshType modelType, std::string _name, Camera* _camera, btRigidBody* _rigidBody);
     ~MeshRenderer();
     void draw();
 
@@ -26,6 +26,7 @@ private:
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     glm::mat4 modelMatrix;
+    std::string name = "";
 
     Camera* camera;
     glm::vec3 position;
