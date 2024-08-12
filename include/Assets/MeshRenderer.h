@@ -21,7 +21,7 @@ public:
     void setScale(glm::vec3 _scale);
     void setProgram(GLuint _program);
     void setTexture(GLuint _textureID);
-
+    
 private:
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
@@ -32,6 +32,7 @@ private:
     glm::vec3 position;
     glm::vec3 scale;
     GLuint vao, vbo, ebo, texture, program;
-    btRigidBody* rigidBody;
 
+public:
+    btRigidBody* rigidBody;
 };

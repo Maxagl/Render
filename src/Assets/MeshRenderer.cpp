@@ -6,6 +6,7 @@ MeshRenderer::MeshRenderer(MeshType modelType, std::string _name, Camera* _camer
     camera = _camera;
     name = _name;
     scale = glm::vec3(1.0f, 1.0f, 1.0f);
+    // 初始位置都是0，后面控制都由bullet来控制
     position = glm::vec3(0.0f, 0.0f, 0.0f);
     switch (modelType)
     {
@@ -52,6 +53,7 @@ void MeshRenderer::draw()
     rigidBody->getMotionState()->getWorldTransform(t);
     // 直接找到角度和translattion就结束了，这也太简单了吧
     btQuaternion rotation = t.getRotation();
+    // 这里找到的，就是前面bullet的state里面设置的原点。这个原点就是平移的点
     btVector3 translate = t.getOrigin();
 
     glm::mat4 RotationMatrix = glm::rotate(glm::mat4(1.0f), rotation.getAngle(), 

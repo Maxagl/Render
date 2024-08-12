@@ -15,6 +15,7 @@ Camera* camera;
 LightRenderer* light;
 MeshRenderer* sphere;
 MeshRenderer* ground;
+MeshRenderer* enemy;
 
 btDiscreteDynamicsWorld* dynamicsWorld;
 
@@ -26,6 +27,20 @@ GLuint sphereTexture, groundTexture;
 void initGame();
 void renderScene();
 void addRigidBodies();
+void myTickCallback(btDynamicsWorld* dynamicsWorld, btScalar timeStep);
+
+void myTickCallback(btDynamicsWorld* dynamicsWorld, btScalar timeStep)
+{
+    btTransform t(enemy->rigidBody->getWorldTransform());
+    t.setOrigin(t.getOrigin() + btVector3(-15, 0, 0) * timeStep);
+
+    if(t.getOrigin().x() <= -18.0f)
+    {
+        t.setOrigin(btVector3(18, 1, 0));
+    }
+    enemy->rigidBody->setWorldTransform(t);
+    enemy->rigidBody->getMotionState()->setWorldTransform(t);
+}
 
 static void glfwError(int id, const char* description)
 {
@@ -36,6 +51,7 @@ void addRigidBodies()
     btScalar mass = 13.0f;
 	btVector3 sphereInertia(0, 0, 0);
     btCollisionShape* sphereShape = new btSphereShape(1.0f);
+    // 后面btVector就是相对原点的初始位置，可以看btTransform构造体的说明
     btDefaultMotionState* sphereMotionState = new btDefaultMotionState(btTransform(btQuaternion(0, 0, 0, 1), btVector3(0, 0.5f, 0)));
     btRigidBody::btRigidBodyConstructionInfo sphereRigidBodyCI(mass, sphereMotionState, sphereShape, sphereInertia);
     btRigidBody*  sphereRigidBody = new btRigidBody(sphereRigidBodyCI);
@@ -74,6 +90,19 @@ void addRigidBodies()
     btRigidBody::btRigidBodyConstructionInfo rbCI(0.0f, motionState, shape, btVector3(0.0f, 0.0f, 0.0f));
     btRigidBody* rb = new btRigidBody(rbCI);
 
+    rb->setFriction(1.0f);
+    rb->setRestitution(0.0f);
+    rb->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+    dynamicsWorld->addRigidBody(rb);
+    
+    enemy = new MeshRenderer(MeshType::kCube, "enemy", camera, rb);
+    enemy->setProgram(textureShaderProgram);
+    enemy->setTexture(groundTexture);
+    enemy->setScale(glm::vec3(1.0f, 1.0f, 1.0f));
+
+    rb->setUserPointer(enemy);
+
+    
 }
 void initGame()
 {
@@ -101,6 +130,7 @@ void initGame()
 
     dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, btCollisionConfiguration);
     dynamicsWorld->setGravity(btVector3(0, -9.8, 0));
+    dynamicsWorld->setInternalTickCallback(myTickCallback);
     addRigidBodies();
 
 }
@@ -111,6 +141,7 @@ void renderScene()
     glClearColor(1.0f, 1.0f, 0.0f, 1.0);
     sphere->draw();
     ground->draw();
+    enemy->draw();
 }
 
 int main(int argc, char ** argv)
