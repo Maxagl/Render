@@ -23,11 +23,31 @@ GLuint flatShaderProgram, litTextureShaderProgram, textProgram;
 GLuint textureShaderProgram;
 GLuint sphereTexture, groundTexture;
 
+bool grounded;
+
 
 void initGame();
 void renderScene();
 void addRigidBodies();
 void myTickCallback(btDynamicsWorld* dynamicsWorld, btScalar timeStep);
+void updateKeyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(window, true);
+    }
+    if(key == GLFW_KEY_UP && action == GLFW_PRESS)
+    {
+        if(grounded == true)
+        {
+            grounded = false;
+            sphere->rigidBody->applyImpulse(btVector3(0.0f, 100.0f, 0.0f), btVector3(0.0f, 0.0f, 0.0f));
+            std::cout << "pressed up key" << std::endl;
+        }
+    }
+}
+
+
 
 void myTickCallback(btDynamicsWorld* dynamicsWorld, btScalar timeStep)
 {
@@ -40,6 +60,51 @@ void myTickCallback(btDynamicsWorld* dynamicsWorld, btScalar timeStep)
     }
     enemy->rigidBody->setWorldTransform(t);
     enemy->rigidBody->getMotionState()->setWorldTransform(t);
+
+    grounded = false;
+    int numManifolds = dynamicsWorld->getDispatcher()->getNumManifolds();
+    for(int i{0}; i < numManifolds; ++i)
+    {
+        btPersistentManifold* contactManifold = dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+        int numContacts = contactManifold->getNumContacts();
+        if(numContacts > 0)
+        {
+            const btCollisionObject* objA = contactManifold->getBody0();
+            const btCollisionObject* objB = contactManifold->getBody1();
+
+            MeshRenderer* gModA = (MeshRenderer*)objA->getUserPointer();
+            MeshRenderer* gModB = (MeshRenderer*)objB->getUserPointer();
+
+            if((gModA->name == "hero" && gModB->name == "enemy") || (gModA->name == "enemy" && gModB->name == "hero"))
+            {
+                std::cout << "collision" << gModA->name << "with" << gModB->name;
+                if(gModB->name == "enemy")
+                {
+                    btTransform b(gModB->rigidBody->getWorldTransform());
+                    b.setOrigin(btVector3(18, 1, 0));
+                    gModB->rigidBody->setWorldTransform(b);
+                    gModB->rigidBody->getMotionState()->setWorldTransform(b);
+                }
+                else
+                {
+                    btTransform a(gModA->rigidBody->getWorldTransform());
+                    a.setOrigin(btVector3(18, 1, 0));
+                    gModA->rigidBody->setWorldTransform(a);
+                    gModA->rigidBody->getMotionState()->setWorldTransform(a);                
+                }
+            }
+
+            if((gModA->name == "hero" && gModB->name == "ground") || (gModA->name == "ground" && gModB->name == "hero"))
+            {
+                std::cout << "collision" << gModA->name << "with" << gModB->name;
+                grounded = true;
+            }
+
+
+        }
+    }
+
+
 }
 
 static void glfwError(int id, const char* description)
@@ -65,6 +130,8 @@ void addRigidBodies()
     sphere->setTexture(sphereTexture);
     //sphere->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     sphere->setScale(glm::vec3(1.0f));
+    // 告知这个body是被哪个指针所试用，后面碰撞的时候可以直接找到这个指针
+    sphereRigidBody->setUserPointer(sphere);
     dynamicsWorld->addRigidBody(sphereRigidBody);
 
     // github官网文档有介绍MotionState是什么
@@ -92,7 +159,7 @@ void addRigidBodies()
 
     rb->setFriction(1.0f);
     rb->setRestitution(0.0f);
-    rb->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+    rb->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
     dynamicsWorld->addRigidBody(rb);
     
     enemy = new MeshRenderer(MeshType::kCube, "enemy", camera, rb);
@@ -150,6 +217,7 @@ int main(int argc, char ** argv)
     glfwInit();
     GLFWwindow* window = glfwCreateWindow(1920, 1080, "Hello Opengl", NULL, NULL);
     glfwMakeContextCurrent(window);
+    glfwSetKeyCallback(window, updateKeyboard);
     glewInit();
     initGame();
     auto previousTime = std::chrono::high_resolution_clock::now();

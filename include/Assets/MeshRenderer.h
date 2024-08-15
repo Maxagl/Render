@@ -26,7 +26,6 @@ private:
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     glm::mat4 modelMatrix;
-    std::string name = "";
 
     Camera* camera;
     glm::vec3 position;
@@ -35,4 +34,5 @@ private:
 
 public:
     btRigidBody* rigidBody;
+    std::string name = "";
 };
