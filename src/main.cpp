@@ -7,6 +7,8 @@
 #include "Assets/LightRenderer.h"
 #include "Assets/MeshRenderer.h"
 #include "Assets/TextureLoader.h"
+#include "Assets/TextRenderer.h"
+
 
 #include <bullet/btBulletDynamicsCommon.h>
 #include <chrono>
@@ -16,6 +18,7 @@ LightRenderer* light;
 MeshRenderer* sphere;
 MeshRenderer* ground;
 MeshRenderer* enemy;
+TextRenderer* label;
 
 btDiscreteDynamicsWorld* dynamicsWorld;
 
@@ -23,7 +26,9 @@ GLuint flatShaderProgram, litTextureShaderProgram, textProgram;
 GLuint textureShaderProgram;
 GLuint sphereTexture, groundTexture;
 
-bool grounded;
+bool grounded = false;
+bool gameover = true;
+int score = 0;
 
 
 void initGame();
@@ -38,12 +43,20 @@ void updateKeyboard(GLFWwindow* window, int key, int scancode, int action, int m
     }
     if(key == GLFW_KEY_UP && action == GLFW_PRESS)
     {
-        if(grounded == true)
+        if(gameover)
         {
-            grounded = false;
-            sphere->rigidBody->applyImpulse(btVector3(0.0f, 100.0f, 0.0f), btVector3(0.0f, 0.0f, 0.0f));
-            std::cout << "pressed up key" << std::endl;
+            gameover = false;
         }
+        else
+        {
+            if(grounded == true)
+            {
+                grounded = false;
+                sphere->rigidBody->applyImpulse(btVector3(0.0f, 100.0f, 0.0f), btVector3(0.0f, 0.0f, 0.0f));
+                std::cout << "pressed up key" << std::endl;
+            }
+        }
+
     }
 }
 
@@ -51,60 +64,66 @@ void updateKeyboard(GLFWwindow* window, int key, int scancode, int action, int m
 
 void myTickCallback(btDynamicsWorld* dynamicsWorld, btScalar timeStep)
 {
-    btTransform t(enemy->rigidBody->getWorldTransform());
-    t.setOrigin(t.getOrigin() + btVector3(-15, 0, 0) * timeStep);
-
-    if(t.getOrigin().x() <= -18.0f)
+    if(!gameover)
     {
-        t.setOrigin(btVector3(18, 1, 0));
-    }
-    enemy->rigidBody->setWorldTransform(t);
-    enemy->rigidBody->getMotionState()->setWorldTransform(t);
+        btTransform t(enemy->rigidBody->getWorldTransform());
+        t.setOrigin(t.getOrigin() + btVector3(-15, 0, 0) * timeStep);
 
-    grounded = false;
-    int numManifolds = dynamicsWorld->getDispatcher()->getNumManifolds();
-    for(int i{0}; i < numManifolds; ++i)
-    {
-        btPersistentManifold* contactManifold = dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
-        int numContacts = contactManifold->getNumContacts();
-        if(numContacts > 0)
+        if(t.getOrigin().x() <= -18.0f)
         {
-            const btCollisionObject* objA = contactManifold->getBody0();
-            const btCollisionObject* objB = contactManifold->getBody1();
+            t.setOrigin(btVector3(18, 1, 0));
+            ++score;
+            label->setText("Score: " + std::to_string(score));
+        }
+        enemy->rigidBody->setWorldTransform(t);
+        enemy->rigidBody->getMotionState()->setWorldTransform(t);
 
-            MeshRenderer* gModA = (MeshRenderer*)objA->getUserPointer();
-            MeshRenderer* gModB = (MeshRenderer*)objB->getUserPointer();
-
-            if((gModA->name == "hero" && gModB->name == "enemy") || (gModA->name == "enemy" && gModB->name == "hero"))
+        grounded = false;
+        int numManifolds = dynamicsWorld->getDispatcher()->getNumManifolds();
+        for(int i{0}; i < numManifolds; ++i)
+        {
+            btPersistentManifold* contactManifold = dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
+            int numContacts = contactManifold->getNumContacts();
+            if(numContacts > 0)
             {
-                std::cout << "collision" << gModA->name << "with" << gModB->name;
-                if(gModB->name == "enemy")
+                const btCollisionObject* objA = contactManifold->getBody0();
+                const btCollisionObject* objB = contactManifold->getBody1();
+
+                MeshRenderer* gModA = (MeshRenderer*)objA->getUserPointer();
+                MeshRenderer* gModB = (MeshRenderer*)objB->getUserPointer();
+
+                if((gModA->name == "hero" && gModB->name == "enemy") || (gModA->name == "enemy" && gModB->name == "hero"))
                 {
-                    btTransform b(gModB->rigidBody->getWorldTransform());
-                    b.setOrigin(btVector3(18, 1, 0));
-                    gModB->rigidBody->setWorldTransform(b);
-                    gModB->rigidBody->getMotionState()->setWorldTransform(b);
+                    std::cout << "collision" << gModA->name << "with" << gModB->name;
+                    if(gModB->name == "enemy")
+                    {
+                        btTransform b(gModB->rigidBody->getWorldTransform());
+                        b.setOrigin(btVector3(18, 1, 0));
+                        gModB->rigidBody->setWorldTransform(b);
+                        gModB->rigidBody->getMotionState()->setWorldTransform(b);
+                    }
+                    else
+                    {
+                        btTransform a(gModA->rigidBody->getWorldTransform());
+                        a.setOrigin(btVector3(18, 1, 0));
+                        gModA->rigidBody->setWorldTransform(a);
+                        gModA->rigidBody->getMotionState()->setWorldTransform(a);                
+                    }
+                    gameover = true;
+                    score = 0;
+                    label->setText("Score: " + std::to_string(score));
                 }
-                else
+
+                if((gModA->name == "hero" && gModB->name == "ground") || (gModA->name == "ground" && gModB->name == "hero"))
                 {
-                    btTransform a(gModA->rigidBody->getWorldTransform());
-                    a.setOrigin(btVector3(18, 1, 0));
-                    gModA->rigidBody->setWorldTransform(a);
-                    gModA->rigidBody->getMotionState()->setWorldTransform(a);                
+                    std::cout << "collision" << gModA->name << "with" << gModB->name;
+                    grounded = true;
                 }
+
+
             }
-
-            if((gModA->name == "hero" && gModB->name == "ground") || (gModA->name == "ground" && gModB->name == "hero"))
-            {
-                std::cout << "collision" << gModA->name << "with" << gModB->name;
-                grounded = true;
-            }
-
-
         }
     }
-
-
 }
 
 static void glfwError(int id, const char* description)
@@ -177,6 +196,7 @@ void initGame()
     ShaderLoader shader;
     flatShaderProgram = shader.CreateProgram("../Shaders/FlatModel.vs", "../Shaders/FlatModel.fs");
     textureShaderProgram = shader.CreateProgram("../Shaders/TexturedModel.vs", "../Shaders/TexturedModel.fs");
+    textProgram = shader.CreateProgram("../Shaders/text.vs", "../Shaders/text.fs");
 
     TextureLoader tLoader;
     sphereTexture = tLoader.getTextureID("../Images/globe.jpg");
@@ -200,6 +220,9 @@ void initGame()
     dynamicsWorld->setInternalTickCallback(myTickCallback);
     addRigidBodies();
 
+    label = new TextRenderer("Score: 0", "../font/gooddog.ttf", 64, glm::vec3(1.0f, 0.0f, 0.0f), textProgram);
+    label->setPosition(glm::vec2(320.f, 500.f));
+
 }
 
 void renderScene()
@@ -209,6 +232,8 @@ void renderScene()
     sphere->draw();
     ground->draw();
     enemy->draw();
+
+    label->draw();
 }
 
 int main(int argc, char ** argv)

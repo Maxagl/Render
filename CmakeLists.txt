@@ -8,6 +8,9 @@ enable_testing()
 
 include_directories(include)
 include_directories(include/bullet)
+include_directories(include/freetypefont)
+include_directories(include/freetypefont/freetype)
+include_directories(include/freetypefont/freetype/config)
 # 添加lib的文件夹，必须在add_executable之前
 link_directories(src/libs)
 
@@ -19,6 +22,7 @@ set(SOURCES
     src/Assets/ShaderLoader.cpp
     src/Assets/MeshRenderer.cpp
     src/Assets/TextureLoader.cpp
+    src/Assets/TextRenderer.cpp
 )
 
 add_executable(myEngine ${SOURCES})
@@ -37,6 +41,6 @@ set_target_properties(MyLibName
 # target_link_libraries(test PUBLIC ${PROTOBUF_LIBRARY})
 
 # 会自动把文件里面带lib的给你找齐
-target_link_libraries(myEngine glew32 glfw3 glfw3_mt glfw3dll BulletCollision BulletDynamics LinearMath)
+target_link_libraries(myEngine glew32 glfw3 glfw3_mt glfw3dll BulletCollision BulletDynamics LinearMath freetype)
 target_link_libraries(myEngine MyLibName)
 

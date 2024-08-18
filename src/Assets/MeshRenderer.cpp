@@ -53,7 +53,7 @@ void MeshRenderer::draw()
     rigidBody->getMotionState()->getWorldTransform(t);
     // 直接找到角度和translattion就结束了，这也太简单了吧
     btQuaternion rotation = t.getRotation();
-    // 这里找到的，就是前面bullet的state里面设置的原点。这个原点就是平移的点
+    // 这里找到的，就是bullet里面当前物体的位置，直接把需要渲染的内容移动到这里就可以
     btVector3 translate = t.getOrigin();
 
     glm::mat4 RotationMatrix = glm::rotate(glm::mat4(1.0f), rotation.getAngle(), 
