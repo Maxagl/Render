@@ -13,7 +13,7 @@
 class MeshRenderer
 {
 public:
-    MeshRenderer(MeshType modelType, std::string _name, Camera* _camera, btRigidBody* _rigidBody);
+    MeshRenderer(MeshType modelType, std::string _name, Camera* _camera, btRigidBody* _rigidBody, LightRenderer* _light, float _specularStrength, float _ambientStrength);
     ~MeshRenderer();
     void draw();
 
@@ -31,6 +31,8 @@ private:
     glm::vec3 position;
     glm::vec3 scale;
     GLuint vao, vbo, ebo, texture, program;
+    LightRenderer* light;
+    float ambientStrength, specularStrength;
 
 public:
     btRigidBody* rigidBody;

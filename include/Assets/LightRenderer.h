@@ -17,7 +17,7 @@ private:
     std::vector<GLuint> indices;
     glm::vec3 position;
     glm::vec3 color;
-    GLuint vbo, ebo, vao, program;
+    GLuint vbo, ebo, vao, texture, program;
 
 
 public:

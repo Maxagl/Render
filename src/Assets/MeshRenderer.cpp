@@ -1,10 +1,15 @@
 #include "Assets/MeshRenderer.h"
 
-MeshRenderer::MeshRenderer(MeshType modelType, std::string _name, Camera* _camera, btRigidBody* _rigidBody)
+MeshRenderer::MeshRenderer(MeshType modelType, std::string _name, Camera* _camera, btRigidBody* _rigidBody, LightRenderer* _light, float _specularStrength, float _ambientStrength)
 {
     rigidBody = _rigidBody;
     camera = _camera;
     name = _name;
+    light = _light;
+    ambientStrength = _ambientStrength;
+    specularStrength = _specularStrength;
+
+
     scale = glm::vec3(1.0f, 1.0f, 1.0f);
     // 初始位置都是0，后面控制都由bullet来控制
     position = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -40,6 +45,9 @@ MeshRenderer::MeshRenderer(MeshType modelType, std::string _name, Camera* _camer
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, Vertex::texCoords)));
 
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(offsetof(Vertex, Vertex::normal)));
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
@@ -73,6 +81,23 @@ void MeshRenderer::draw()
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
     glBindTexture(GL_TEXTURE_2D, texture);
+
+    GLuint cameraPosLoc = glGetUniformLocation(program, "cameraPos");
+    glUniform3f(cameraPosLoc, camera->getCameraPosition().x, camera->getCameraPosition().y, camera->getCameraPosition().z);
+    
+    // 这些模型是不知道有光照这个东西的，需要把光照基本的东西传输给他然后假装有这个光线照过来，再模型上面进行计算
+    GLuint lightPosLoc = glGetUniformLocation(program, "lightPos");
+    glUniform3f(lightPosLoc, this->light->getPosition().x, this->light->getPosition().y, this->light->getPosition().z);
+    
+    GLuint lightColorLoc = glGetUniformLocation(program, "lightColor");
+    glUniform3f(lightColorLoc, this->light->getColor().x, this->light->getColor().y, this->light->getColor().z);
+    
+    GLuint specularStrengthLoc = glGetUniformLocation(program, "specularStrength");
+    glUniform1f(specularStrengthLoc, specularStrength);
+
+    GLuint ambientStrengthLoc = glGetUniformLocation(program, "ambientStrength");
+    glUniform1f(ambientStrengthLoc, ambientStrength);
+
 
     // vao 相当于一个固定块，或者指针。激活相当于把VBO，EBO那些操作干一遍
     glBindVertexArray(vao);

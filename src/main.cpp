@@ -144,8 +144,8 @@ void addRigidBodies()
     //sphereShape->calculateLocalInertia(mass, sphereInertia);
     sphereRigidBody->setActivationState(DISABLE_DEACTIVATION);
 
-    sphere = new MeshRenderer(MeshType::kSphere, "hero", camera, sphereRigidBody);
-    sphere->setProgram(textureShaderProgram);
+    sphere = new MeshRenderer(MeshType::kSphere, "hero", camera, sphereRigidBody, light, 0.1f, 0.5f);
+    sphere->setProgram(litTextureShaderProgram);
     sphere->setTexture(sphereTexture);
     //sphere->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     sphere->setScale(glm::vec3(1.0f));
@@ -162,8 +162,8 @@ void addRigidBodies()
     groundRigidBody->setRestitution(0.0);
     groundRigidBody->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
 
-    ground = new MeshRenderer(MeshType::kCube, "ground", camera, groundRigidBody);
-    ground->setProgram(textureShaderProgram);
+    ground = new MeshRenderer(MeshType::kCube, "ground", camera, groundRigidBody, light, 0.1f, 0.5f);
+    ground->setProgram(litTextureShaderProgram);
     ground->setTexture(groundTexture);
     ground->setScale(glm::vec3(4.0f, 0.5f, 4.0f));
     groundRigidBody->setUserPointer(ground);
@@ -181,8 +181,8 @@ void addRigidBodies()
     rb->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
     dynamicsWorld->addRigidBody(rb);
     
-    enemy = new MeshRenderer(MeshType::kCube, "enemy", camera, rb);
-    enemy->setProgram(textureShaderProgram);
+    enemy = new MeshRenderer(MeshType::kCube, "enemy", camera, rb, light, 0.1f, 0.5f);
+    enemy->setProgram(litTextureShaderProgram);
     enemy->setTexture(groundTexture);
     enemy->setScale(glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -197,6 +197,7 @@ void initGame()
     flatShaderProgram = shader.CreateProgram("../Shaders/FlatModel.vs", "../Shaders/FlatModel.fs");
     textureShaderProgram = shader.CreateProgram("../Shaders/TexturedModel.vs", "../Shaders/TexturedModel.fs");
     textProgram = shader.CreateProgram("../Shaders/text.vs", "../Shaders/text.fs");
+    litTextureShaderProgram = shader.CreateProgram("../Shaders/LitTexturedModel.vs", "../Shaders/LitTexturedModel.fs");
 
     TextureLoader tLoader;
     sphereTexture = tLoader.getTextureID("../Images/globe.jpg");
@@ -206,9 +207,10 @@ void initGame()
     
 
     camera = new Camera(45.0f, 1920, 1080, 0.2f, 100.f, glm::vec3(0.0f, 4.0f, 20.0f));
-    light = new LightRenderer(MeshType::kCube, camera);
+    light = new LightRenderer(MeshType::kSphere, camera);
     light->setProgram(flatShaderProgram);
-    light->setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    light->setPosition(glm::vec3(0.0f, 10.0f, 0.0f));
+    light->setColor(glm::vec3(1.0f, 1.0f, 1.0f));
 
     btBroadphaseInterface* broadphase = new btDbvtBroadphase();
     btDefaultCollisionConfiguration* btCollisionConfiguration = new btDefaultCollisionConfiguration();;
@@ -229,6 +231,7 @@ void renderScene()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(1.0f, 1.0f, 0.0f, 1.0);
+    light->draw();
     sphere->draw();
     ground->draw();
     enemy->draw();
